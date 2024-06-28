@@ -1,0 +1,14 @@
+<form>
+  <mat-form-field>
+    <mat-label>Battle against</mat-label>
+    <mat-select
+      [(ngModel)]="selectedValue"
+      name="battle-type"
+      (selectionChange)="updateGameType(selectedValue)"
+    >
+      @for (game of gameTypes; track game) {
+      <mat-option [value]="game.value">{{ game.viewValue }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</form>

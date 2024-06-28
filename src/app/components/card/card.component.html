@@ -1,0 +1,39 @@
+<mat-card-header>
+  <mat-card-title-group class="m-4">
+    <mat-card-title><b>Name:</b> {{ data().name }}</mat-card-title>
+    <mat-card-subtitle>
+      @if (type() === 'starships') {
+      <div class="text-xl">
+        <b>Crew:</b>
+        <div class="e2e-card-value">{{ getDataAsStarship().crew }}</div>
+      </div>
+      } @else {
+      <div class="text-xl">
+        <b>Mass:</b>
+        <div class="e2e-card-value">{{ getDataAsPerson().mass }}</div>
+      </div>
+      }
+    </mat-card-subtitle>
+  </mat-card-title-group>
+</mat-card-header>
+<mat-card-content class="m-4">
+  <ul>
+    @if (type() === 'starships') {
+    <li><b>Consumables:</b> {{ getDataAsStarship().consumables }}</li>
+    <li><b>Cost in credits:</b> {{ getDataAsStarship().cost_in_credits }}</li>
+    <li>
+      <b>Hyperdrive rating:</b> {{ getDataAsStarship().hyperdrive_rating }}
+    </li>
+    <li><b>Length:</b> {{ getDataAsStarship().length }}</li>
+    <li><b>Model:</b> {{ getDataAsStarship().model }}</li>
+    <li><b>Passengers:</b> {{ getDataAsStarship().passengers }}</li>
+    } @else {
+    <li><b>Birth year:</b> {{ getDataAsPerson().birth_year }}</li>
+    <li><b>Eye color:</b> {{ getDataAsPerson().eye_color }}</li>
+    <li><b>Gender:</b> {{ getDataAsPerson().gender }}</li>
+    <li><b>Hair color:</b> {{ getDataAsPerson().hair_color }}</li>
+    <li><b>Height:</b> {{ getDataAsPerson().height }}</li>
+    <li><b>Skin color:</b> {{ getDataAsPerson().skin_color }}</li>
+    }
+  </ul>
+</mat-card-content>
