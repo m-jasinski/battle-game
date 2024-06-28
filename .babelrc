@@ -1,0 +1,7 @@
+{
+  "compact": false,
+  "retainLines": true,
+  "plugins": [
+    ["@babel/plugin-transform-modules-commonjs", { "allowTopLevelThis": true }]
+  ]
+}

@@ -33,7 +33,7 @@ export class StoreService {
     }
   }
 
-  resetPleyrsStats(): void {
+  resetPlayersStats(): void {
     this._playerOneScore.set(0);
     this._playerTwoScore.set(0);
   }

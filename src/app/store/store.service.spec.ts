@@ -37,7 +37,7 @@ describe('StoreService', () => {
   it("should reset the players' scores", () => {
     storeService.addPoint(1);
     storeService.addPoint(2);
-    storeService.resetPleyrsStats();
+    storeService.resetPlayersStats();
     expect(storeService.getPlayer1Score()).toBe(0);
     expect(storeService.getPlayer2Score()).toBe(0);
   });

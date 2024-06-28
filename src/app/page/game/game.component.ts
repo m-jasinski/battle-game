@@ -1,4 +1,11 @@
-import { Component, OnDestroy, effect, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  effect,
+  inject,
+} from '@angular/core';
 import { StoreService } from '../../store/store.service';
 import { AsyncPipe, NgIf, UpperCasePipe } from '@angular/common';
 import { CardComponent } from '../../components/card/card.component';
@@ -35,12 +42,14 @@ import { getStarshipInitialData } from '../../data/starship-data.';
   providers: [ApiService],
   templateUrl: './game.component.html',
   styleUrl: './game.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GameComponent implements OnDestroy {
   private _storeService = inject(StoreService);
   private _apiService = inject(ApiService);
   private _unsubscribe$: Subject<boolean> = new Subject<boolean>();
   private _snackBar = inject(MatSnackBar);
+  private _cdr = inject(ChangeDetectorRef);
 
   gameType!: GameType;
 
@@ -64,6 +73,7 @@ export class GameComponent implements OnDestroy {
     effect(() => {
       this.player1Score = this._storeService.getPlayer1Score();
       this.player2Score = this._storeService.getPlayer2Score();
+      this._cdr.detectChanges();
     });
   }
 
@@ -81,7 +91,7 @@ export class GameComponent implements OnDestroy {
   }
 
   clearScore(): void {
-    this._storeService.resetPleyrsStats();
+    this._storeService.resetPlayersStats();
   }
 
   private _openSnackBar(message: string, shouldStay: boolean = false) {
@@ -93,6 +103,7 @@ export class GameComponent implements OnDestroy {
 
   private _getPersons(): void {
     this.loading = true;
+    this._cdr.detectChanges();
     forkJoin([
       this._apiService.getRandomPerson(),
       this._apiService.getRandomPerson(),
@@ -103,24 +114,27 @@ export class GameComponent implements OnDestroy {
           this._setFetchedData(this.gameType, data);
         },
         error: (err) => this._setInitialState(),
+        complete: () => this._cdr.detectChanges(),
       });
   }
 
   private _getStarships(): void {
     this.loading = true;
+    this._cdr.detectChanges();
     forkJoin([
       this._apiService.getRandomStarship(),
       this._apiService.getRandomStarship(),
     ])
       .pipe(takeUntil(this._unsubscribe$))
-      .subscribe(
-        (data: [ResponseData<Starship>, ResponseData<Starship>]) => {
+      .subscribe({
+        next: (data: [ResponseData<Starship>, ResponseData<Starship>]) => {
           this._setFetchedData(this.gameType, data);
         },
-        (err) => {
+        error: (err) => {
           this._setInitialState();
-        }
-      );
+        },
+        complete: () => this._cdr.detectChanges(),
+      });
   }
 
   private _setFetchedData(
@@ -195,6 +209,7 @@ export class GameComponent implements OnDestroy {
     let timer = setTimeout(() => {
       this.whichPlayerWon = 0;
       clearTimeout(timer);
+      this._cdr.detectChanges();
     }, 1200);
   }
 
