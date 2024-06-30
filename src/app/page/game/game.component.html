@@ -1,46 +1,23 @@
 <div class="flex flex-col sm:grid grid-details justify-center gap-5">
   <mat-card appearance="outlined">
-    <div class="border-b-2 border-gray-200 mx-8 mt-8">
-      <h2 class="flex max-w-fit pr-4 mb-4 text-xl">
-        Player 1
-        <span
-          class="ml-4 transition-all"
-          [class.scale-150]="whichPlayerWon === 1"
-          [class.animate-pulse-fast]="whichPlayerWon === 1"
-          matBadgeDescription="points"
-          [matBadge]="player1Score"
-          matBadgeSize="large"
-        ></span>
-      </h2>
-    </div>
-    <ng-container *ngIf="player1Data && !loading; else loadingTemplate">
-      <app-card class="grid" [data]="player1Data" [type]="gameType"></app-card>
-    </ng-container>
-    <ng-template #loadingTemplate>
-      <app-loading-card></app-loading-card>
-    </ng-template>
+    <app-card
+      [type]="gameType"
+      player="Player 1"
+      [playerData]="player1Data"
+      [playerScore]="player1Score"
+      [loading]="loading"
+      [shouldAnimate]="whichPlayerWon() === GameResultEnum.PLAYER1"
+    ></app-card>
   </mat-card>
-
   <mat-card appearance="outlined">
-    <div class="border-b-2 border-gray-200 mx-8 mt-8">
-      <h2 class="flex max-w-fit pr-4 mb-4 text-xl">
-        Player 2
-        <span
-          class="ml-4 transition-all"
-          [class.scale-150]="whichPlayerWon === 2"
-          [class.animate-pulse-fast]="whichPlayerWon === 2"
-          matBadgeDescription="points"
-          [matBadge]="player2Score"
-          matBadgeSize="large"
-        ></span>
-      </h2>
-    </div>
-    <ng-container *ngIf="player2Data && !loading; else loadingTemplate">
-      <app-card class="grid" [data]="player2Data" [type]="gameType"></app-card>
-    </ng-container>
-    <ng-template #loadingTemplate>
-      <app-loading-card></app-loading-card>
-    </ng-template>
+    <app-card
+      [type]="gameType"
+      player="Player 2"
+      [playerData]="player2Data"
+      [playerScore]="player2Score"
+      [loading]="loading"
+      [shouldAnimate]="whichPlayerWon() === GameResultEnum.PLAYER2"
+    ></app-card>
   </mat-card>
 </div>
 

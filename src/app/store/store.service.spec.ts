@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { StoreService } from './store.service';
+import { GameResult, StoreService } from './store.service';
 import { GameType } from '../components/select-type-battle/select-type-battle.component';
 
 describe('StoreService', () => {
@@ -25,18 +25,18 @@ describe('StoreService', () => {
   });
 
   it('should update the player 1 score', () => {
-    storeService.addPoint(1);
+    storeService.addPoint(GameResult.PLAYER1);
     expect(storeService.getPlayer1Score()).toBe(1);
   });
 
   it('should update the player 2 score', () => {
-    storeService.addPoint(2);
+    storeService.addPoint(GameResult.PLAYER2);
     expect(storeService.getPlayer2Score()).toBe(1);
   });
 
   it("should reset the players' scores", () => {
-    storeService.addPoint(1);
-    storeService.addPoint(2);
+    storeService.addPoint(GameResult.PLAYER1);
+    storeService.addPoint(GameResult.PLAYER2);
     storeService.resetPlayersStats();
     expect(storeService.getPlayer1Score()).toBe(0);
     expect(storeService.getPlayer2Score()).toBe(0);

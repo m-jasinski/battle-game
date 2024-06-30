@@ -1,19 +1,23 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { GameComponent } from './game.component';
-import { StoreService } from '../../store/store.service';
-import { ApiService } from '../../api/api.service';
+import { GameResult, StoreService } from '../../store/store.service';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ChangeDetectorRef } from '@angular/core';
-import { getPersonInitialData } from '../../data/person-data';
-import { getStarshipInitialData } from '../../data/starship-data.';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { GameService } from './game.service';
+import { of, throwError } from 'rxjs';
+import {
+  mockResponsePersonPlayer1,
+  mockResponsePersonPlayer2,
+  mockResponseStarshipPlayer1,
+  mockResponseStarshipPlayer2,
+} from '../../data/mocks';
 
 describe('GameComponent', () => {
   let component: GameComponent;
   let fixture: ComponentFixture<GameComponent>;
   let storeServiceMock: jest.Mocked<StoreService>;
-  let apiServiceMock: jest.Mocked<ApiService>;
+  let gameServiceMock: jest.Mocked<GameService>;
   let changeDetectorRefMock: jest.Mocked<ChangeDetectorRef>;
 
   beforeEach(async () => {
@@ -25,9 +29,12 @@ describe('GameComponent', () => {
       addPoint: jest.fn(),
     } as any;
 
-    apiServiceMock = {
-      getRandomPerson: jest.fn(),
-      getRandomStarship: jest.fn(),
+    gameServiceMock = {
+      getPersons: jest.fn().mockReturnValue(of(mockResponsePersonPlayer1)),
+      getStarships: jest.fn().mockReturnValue(of(mockResponseStarshipPlayer1)),
+      submitResult: jest.fn(),
+      openSuccessSnackBar: jest.fn(),
+      openErrorSnackBar: jest.fn(),
     } as any;
 
     changeDetectorRefMock = {
@@ -35,15 +42,10 @@ describe('GameComponent', () => {
     } as any;
 
     await TestBed.configureTestingModule({
-      imports: [
-        GameComponent,
-        HttpClientTestingModule,
-        NoopAnimationsModule,
-        MatSnackBarModule,
-      ],
+      imports: [GameComponent, NoopAnimationsModule, MatSnackBarModule],
       providers: [
         { provide: StoreService, useValue: storeServiceMock },
-        { provide: ApiService, useValue: apiServiceMock },
+        { provide: GameService, useValue: gameServiceMock },
         { provide: ChangeDetectorRef, useValue: changeDetectorRefMock },
       ],
     }).compileComponents();
@@ -56,99 +58,118 @@ describe('GameComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should fetch persons on initialization when gameType is people', () => {
-    jest.spyOn(storeServiceMock, 'getGameType').mockReturnValue('people');
-    const getPersonsSpy = jest.spyOn(component as any, '_getPersons');
+  it('should fetch persons data when game type is people', () => {
+    storeServiceMock.getGameType.mockReturnValue('people');
+    gameServiceMock.getPersons.mockReturnValue(
+      of([mockResponsePersonPlayer1, mockResponsePersonPlayer2])
+    );
 
     fixture.detectChanges();
 
-    expect(getPersonsSpy).toHaveBeenCalled();
+    expect(gameServiceMock.getPersons).toHaveBeenCalled();
+    expect(gameServiceMock.getStarships).not.toHaveBeenCalled();
   });
 
-  it('should fetch starships on initialization when gameType is starships', () => {
-    jest.spyOn(storeServiceMock, 'getGameType').mockReturnValue('starships');
-    const getStarshipsSpy = jest.spyOn(component as any, '_getStarships');
+  it('should fetch starships data when game type is starships', () => {
+    storeServiceMock.getGameType.mockReturnValue('starships');
+    gameServiceMock.getStarships.mockReturnValue(
+      of([mockResponseStarshipPlayer1, mockResponseStarshipPlayer2])
+    );
 
     fixture.detectChanges();
 
-    expect(getStarshipsSpy).toHaveBeenCalled();
+    expect(gameServiceMock.getStarships).toHaveBeenCalled();
+    expect(gameServiceMock.getPersons).not.toHaveBeenCalled();
   });
 
-  it('should update player scores on initialization', () => {
-    jest.spyOn(storeServiceMock, 'getPlayer1Score').mockReturnValue(0);
-    jest.spyOn(storeServiceMock, 'getPlayer2Score').mockReturnValue(0);
+  it('should handle error when fetching data', () => {
+    storeServiceMock.getGameType.mockReturnValue('people');
+    gameServiceMock.getPersons.mockReturnValue(
+      throwError(() => new Error('API Error'))
+    );
 
     fixture.detectChanges();
 
-    expect(component.player1Score).toBe(0);
-    expect(component.player2Score).toBe(0);
+    expect(component.loading).toBeFalsy();
+    expect(component.isError).toBeTruthy();
+    expect(gameServiceMock.openErrorSnackBar).toHaveBeenCalled();
   });
 
-  it('should call _getPersons when fetchData is called with gameType people', () => {
-    component.gameType = 'people';
-    const getPersonsSpy = jest.spyOn(component as any, '_getPersons');
-
-    component.fetchData();
-
-    expect(getPersonsSpy).toHaveBeenCalled();
-  });
-
-  it('should call _getStarships when fetchData is called with gameType starships', () => {
-    component.gameType = 'starships';
-    const getStarshipsSpy = jest.spyOn(component as any, '_getStarships');
-
-    component.fetchData();
-
-    expect(getStarshipsSpy).toHaveBeenCalled();
-  });
-
-  it('should call resetPlayersStats when clearScore is called', () => {
+  it('should clear score', () => {
     component.clearScore();
     expect(storeServiceMock.resetPlayersStats).toHaveBeenCalled();
   });
 
-  it('should correctly parse numeric values', () => {
-    expect((component as any)._getValue('100')).toBe(100);
-    expect((component as any)._getValue('unknown')).toBe(0);
-    expect((component as any)._getValue('1,000')).toBe(1000);
-    expect((component as any)._getValue('100-200')).toBe(200);
-    expect((component as any)._getValue('invalid')).toBe(0);
-  });
-
-  it('should submit result correctly when player 1 wins', async () => {
-    const openSnackBarSpy = jest.spyOn(component as any, '_openSnackBar');
-    await (component as any)._submitResult('100', '50');
-
-    expect(component.whichPlayerWon).toBe(1);
-    expect(storeServiceMock.addPoint).toHaveBeenCalledWith(1);
-    expect(openSnackBarSpy).toHaveBeenCalledWith('PLAYER 1 WON');
-  });
-
-  it('should submit result correctly when player 2 wins', async () => {
-    const openSnackBarSpy = jest.spyOn(component as any, '_openSnackBar');
-    await (component as any)._submitResult('50', '100');
-
-    expect(component.whichPlayerWon).toBe(2);
-    expect(storeServiceMock.addPoint).toHaveBeenCalledWith(2);
-    expect(openSnackBarSpy).toHaveBeenCalledWith('PLAYER 2 WON');
-  });
-
-  it('should submit result correctly on draw', async () => {
-    const openSnackBarSpy = jest.spyOn(component as any, '_openSnackBar');
-    await (component as any)._submitResult('100', '100');
-
-    expect(openSnackBarSpy).toHaveBeenCalledWith('DRAW');
-  });
-
-  it('should return correct initial value for people', () => {
-    expect((component as any)._initialValue('people')).toEqual(
-      getPersonInitialData()
+  it('should fetch new data', () => {
+    component.gameType = 'people';
+    gameServiceMock.getPersons.mockReturnValue(
+      of([mockResponsePersonPlayer1, mockResponsePersonPlayer2])
     );
+
+    component.fetchData();
+    expect(gameServiceMock.getPersons).toHaveBeenCalled();
   });
 
-  it('should return correct initial value for starships', () => {
-    expect((component as any)._initialValue('starships')).toEqual(
-      getStarshipInitialData()
-    );
+  it('should set fetched data for people and player 1 wins', () => {
+    const mockData = [
+      {
+        ...mockResponsePersonPlayer1,
+        result: { properties: { mass: '80' } },
+      },
+      {
+        ...mockResponsePersonPlayer2,
+        result: { properties: { mass: '75' } },
+      },
+    ];
+    gameServiceMock.submitResult.mockReturnValue(GameResult.PLAYER1);
+
+    component['_setFetchedData']('people', mockData as any);
+
+    expect(component.player1Data).toEqual({ mass: '80' });
+    expect(component.player2Data).toEqual({ mass: '75' });
+    expect(gameServiceMock.submitResult).toHaveBeenCalledWith('80', '75');
+    expect(storeServiceMock.addPoint).toHaveBeenCalledWith(GameResult.PLAYER1);
+  });
+
+  it('should set fetched data for people, get draw', () => {
+    const mockData = [
+      {
+        ...mockResponsePersonPlayer1,
+        result: { properties: { mass: '80' } },
+      },
+      {
+        ...mockResponsePersonPlayer2,
+        result: { properties: { mass: '80' } },
+      },
+    ];
+    gameServiceMock.submitResult.mockReturnValue(GameResult.DRAW);
+
+    component['_setFetchedData']('people', mockData as any);
+
+    expect(component.player1Data).toEqual({ mass: '80' });
+    expect(component.player2Data).toEqual({ mass: '80' });
+    expect(gameServiceMock.submitResult).toHaveBeenCalledWith('80', '80');
+    expect(storeServiceMock.addPoint).toHaveBeenCalledWith(GameResult.DRAW);
+  });
+
+  it('should set fetched data for starships and player 2 wins', () => {
+    const mockData = [
+      {
+        ...mockResponseStarshipPlayer1,
+        result: { properties: { crew: '10' } },
+      },
+      {
+        ...mockResponseStarshipPlayer2,
+        result: { properties: { crew: '20' } },
+      },
+    ];
+    gameServiceMock.submitResult.mockReturnValue(GameResult.PLAYER2);
+
+    component['_setFetchedData']('starships', mockData as any);
+
+    expect(component.player1Data).toEqual({ crew: '10' });
+    expect(component.player2Data).toEqual({ crew: '20' });
+    expect(gameServiceMock.submitResult).toHaveBeenCalledWith('10', '20');
+    expect(storeServiceMock.addPoint).toHaveBeenCalledWith(GameResult.PLAYER2);
   });
 });

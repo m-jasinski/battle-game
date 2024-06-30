@@ -19,7 +19,7 @@ describe('Game', () => {
   it('should change game type and fetch new data', () => {
     cy.get('mat-select').click();
     cy.get('mat-option').contains('People').click();
-    cy.get('app-card')
+    cy.get('app-card-content')
       .should('have.length.at.least', 2)
       .each(($card) => {
         expect($card).not.contain('Loading');
@@ -34,7 +34,7 @@ describe('Game', () => {
   });
 
   it('should get initial data, add point and then click button to fetch new data', () => {
-    cy.get('app-card')
+    cy.get('app-card-content')
       .should('have.length.at.least', 2)
       .each(($card) => {
         expect($card).not.contain('Loading');

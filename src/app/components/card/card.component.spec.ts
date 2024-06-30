@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { CardComponent } from './card.component';
-import { mockPersonData, mockStarshipData } from '../../data/mocks';
 
-describe('CardComponent for Starships', () => {
+import { CardComponent } from './card.component';
+import { mockPersonData } from '../../data/mocks';
+
+describe('CardComponent', () => {
   let component: CardComponent;
   let fixture: ComponentFixture<CardComponent>;
 
@@ -13,24 +14,17 @@ describe('CardComponent for Starships', () => {
 
     fixture = TestBed.createComponent(CardComponent);
     fixture.componentRef.setInput('type', 'starships');
-    fixture.componentRef.setInput('data', mockStarshipData);
+    fixture.componentRef.setInput('player', 'Player 1');
+    fixture.componentRef.setInput('playerData', mockPersonData);
+    fixture.componentRef.setInput('playerScore', 0);
+    fixture.componentRef.setInput('loading', false);
+    fixture.componentRef.setInput('shouldAnimate', false);
+
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
-  });
-
-  it('should get data as Starship', () => {
-    expect(component.getDataAsStarship()).toEqual(mockStarshipData);
-  });
-
-  it('should get data as Person', () => {
-    fixture.componentRef.setInput('type', 'people');
-    fixture.componentRef.setInput('data', mockPersonData);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    expect(component.getDataAsPerson()).toBe(mockPersonData);
   });
 });

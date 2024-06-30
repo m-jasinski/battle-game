@@ -1,6 +1,12 @@
 import { Injectable, signal } from '@angular/core';
 import { GameType } from '../components/select-type-battle/select-type-battle.component';
 
+export enum GameResult {
+  'DRAW' = '0',
+  'PLAYER1' = '1',
+  'PLAYER2' = '2',
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -25,10 +31,11 @@ export class StoreService {
     return this._playerTwoScore();
   }
 
-  addPoint(player: 1 | 2): void {
-    if (player === 1) {
+  addPoint(player: GameResult): void {
+    if (player === GameResult.PLAYER1) {
       this._playerOneScore.update((prev) => ++prev);
-    } else {
+    }
+    if (player === GameResult.PLAYER2) {
       this._playerTwoScore.update((prev) => ++prev);
     }
   }
